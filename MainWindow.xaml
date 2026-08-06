@@ -1,0 +1,319 @@
+﻿<Window
+	x:Class="SystemParametersViewer.MainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:dwm="clr-namespace:SuGarToolkit.WPF.Controls.Windows"
+	xmlns:local="clr-namespace:SystemParametersViewer"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	x:Name="Root"
+	Title="SystemParameters"
+	Width="800"
+	Height="600"
+	d:DataContext="{d:DesignInstance local:MainViewModel}"
+	dwm:DwmWindowAttributes.SystemBackdrop="Mica"
+	local:WindowChromeMarginPatcher.IsEnabled="True"
+	Background="Transparent"
+	FontSize="14"
+	mc:Ignorable="d">
+
+	<WindowChrome.WindowChrome>
+		<WindowChrome GlassFrameThickness="-1" NonClientFrameEdges="Left,Right,Bottom" />
+	</WindowChrome.WindowChrome>
+
+	<Window.Resources>
+		<Style TargetType="Button">
+			<Setter Property="MinWidth" Value="90" />
+			<Setter Property="MinHeight" Value="30" />
+		</Style>
+
+		<Style TargetType="ComboBox">
+			<Setter Property="MinWidth" Value="90" />
+			<Setter Property="MinHeight" Value="30" />
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+		</Style>
+
+		<Style TargetType="ComboBoxItem">
+			<Setter Property="MinWidth" Value="90" />
+			<Setter Property="MinHeight" Value="30" />
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+		</Style>
+
+		<Style x:Key="BaseTextBoxStyle" TargetType="TextBox">
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+			<Setter Property="SelectionBrush" Value="{x:Static SystemParameters.WindowGlassBrush}" />
+		</Style>
+
+		<Style BasedOn="{StaticResource BaseTextBoxStyle}" TargetType="TextBox" />
+
+		<Style
+			x:Key="ReadOnlyTextBlockLikeTextBoxStyle"
+			BasedOn="{StaticResource BaseTextBoxStyle}"
+			TargetType="TextBox">
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderBrush" Value="Transparent" />
+			<Setter Property="BorderThickness" Value="0" />
+		</Style>
+
+		<Style
+			x:Key="DataGridReadOnlyTextBlockLikeTextBoxStyle"
+			BasedOn="{StaticResource ReadOnlyTextBlockLikeTextBoxStyle}"
+			TargetType="TextBox">
+			<Setter Property="Padding" Value="6" />
+		</Style>
+
+		<Style x:Key="SimpleDataGridStyle" TargetType="DataGrid">
+			<Style.Resources>
+				<Color x:Key="SimpleDataGridLineColor">#10000000</Color>
+				<SolidColorBrush x:Key="SimpleDataGridLineBrush" Color="{StaticResource SimpleDataGridLineColor}" />
+				<SolidColorBrush
+					x:Key="SimpleDataGridSelectionBackground"
+					Opacity="0.25"
+					Color="{x:Static SystemParameters.WindowGlassColor}" />
+			</Style.Resources>
+			<Setter Property="RowBackground" Value="Transparent" />
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderBrush" Value="Transparent" />
+			<Setter Property="BorderThickness" Value="0" />
+			<Setter Property="HorizontalGridLinesBrush" Value="{StaticResource SimpleDataGridLineBrush}" />
+			<Setter Property="VerticalGridLinesBrush" Value="{StaticResource SimpleDataGridLineBrush}" />
+			<Setter Property="RowHeaderWidth" Value="0" />
+			<Setter Property="RowHeaderStyle" Value="{x:Null}" />
+			<Setter Property="RowHeaderTemplate" Value="{x:Null}" />
+			<Setter Property="RowHeaderTemplateSelector" Value="{x:Null}" />
+			<Setter Property="ColumnHeaderStyle">
+				<Setter.Value>
+					<Style TargetType="DataGridColumnHeader">
+						<Setter Property="Background" Value="Transparent" />
+						<Setter Property="Foreground" Value="Gray" />
+						<Setter Property="FontWeight" Value="SemiBold" />
+						<Setter Property="Padding" Value="6" />
+						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+					</Style>
+				</Setter.Value>
+			</Setter>
+			<Setter Property="CellStyle">
+				<Setter.Value>
+					<Style TargetType="DataGridCell">
+						<Setter Property="Background" Value="Transparent" />
+						<Setter Property="BorderBrush" Value="Transparent" />
+						<Setter Property="BorderThickness" Value="0" />
+						<Style.Triggers>
+							<Trigger Property="IsSelected" Value="True">
+								<Setter Property="Background" Value="{StaticResource SimpleDataGridSelectionBackground}" />
+								<Setter Property="Foreground" Value="{Binding Foreground, Mode=OneWay, RelativeSource={x:Static RelativeSource.Self}}" />
+							</Trigger>
+						</Style.Triggers>
+					</Style>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<local:ObjectToStringConverter x:Key="ObjectToStringConverter" />
+		<local:ObjectToColorConverter x:Key="ObjectToColorConverter" />
+
+		<DataTemplate x:Key="NormalCellTemplate">
+			<TextBox
+				MaxLines="5"
+				Style="{StaticResource ReadOnlyTextBlockLikeTextBoxStyle}"
+				Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToStringConverter}}" />
+		</DataTemplate>
+
+		<DataTemplate x:Key="TextCellTemplate">
+			<StackPanel Orientation="Horizontal" TextBlock.FontFamily="Consolas">
+				<TextBlock Text="&quot;" />
+				<TextBox
+					MaxLines="5"
+					Style="{StaticResource ReadOnlyTextBlockLikeTextBoxStyle}"
+					Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToStringConverter}}" />
+				<TextBlock Text="&quot;" />
+			</StackPanel>
+		</DataTemplate>
+
+		<DataTemplate x:Key="BrushCellTemplate">
+			<StackPanel Orientation="Horizontal">
+				<Ellipse
+					Width="20"
+					Height="20"
+					Fill="{Binding Mode=OneWay}">
+					<Ellipse.Effect>
+						<DropShadowEffect
+							BlurRadius="2"
+							Direction="270"
+							Opacity="0.25"
+							ShadowDepth="1" />
+					</Ellipse.Effect>
+				</Ellipse>
+				<Rectangle Width="4" />
+				<TextBox Style="{StaticResource ReadOnlyTextBlockLikeTextBoxStyle}" Text="{Binding Mode=OneWay}" />
+			</StackPanel>
+		</DataTemplate>
+
+		<DataTemplate x:Key="ColorCellTemplate">
+			<StackPanel Orientation="Horizontal">
+				<Ellipse Width="20" Height="20">
+					<Ellipse.Fill>
+						<SolidColorBrush Color="{Binding Mode=OneWay, Converter={StaticResource ObjectToColorConverter}}" />
+					</Ellipse.Fill>
+					<Ellipse.Effect>
+						<DropShadowEffect
+							BlurRadius="2"
+							Direction="270"
+							Opacity="0.25"
+							ShadowDepth="1" />
+					</Ellipse.Effect>
+				</Ellipse>
+				<Rectangle Width="4" />
+				<TextBox Style="{StaticResource ReadOnlyTextBlockLikeTextBoxStyle}" Text="{Binding Mode=OneWay}" />
+			</StackPanel>
+		</DataTemplate>
+
+		<DataTemplate x:Key="ResourceKeyCellTemplate">
+			<ContentControl Content="{Binding Mode=OneWay}" ContentTemplate="{StaticResource TextCellTemplate}" />
+		</DataTemplate>
+
+		<DataTemplate x:Key="NullCellTemplate">
+			<TextBlock FontFamily="Consolas" Text="null" />
+		</DataTemplate>
+
+		<local:PropertyValueCellTemplateSelector
+			x:Key="PropertyValueCellTemplateSelector"
+			BrushCellTemplate="{StaticResource BrushCellTemplate}"
+			ColorCellTemplate="{StaticResource ColorCellTemplate}"
+			NormalCellTemplate="{StaticResource NormalCellTemplate}"
+			ResourceKeyCellTemplate="{StaticResource ResourceKeyCellTemplate}"
+			TextCellTemplate="{StaticResource TextCellTemplate}" />
+	</Window.Resources>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="auto" />
+		</Grid.RowDefinitions>
+
+		<Border
+			Grid.Row="0"
+			Margin="0,24,0,0"
+			BorderThickness="0">
+			<Border.Background>
+				<LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+					<GradientStop Offset="0.0" Color="#00FFFFFF" />
+					<GradientStop Offset="1.0" Color="#80FFFFFF" />
+				</LinearGradientBrush>
+			</Border.Background>
+		</Border>
+
+		<TextBlock
+			Grid.Row="0"
+			Margin="24,24,24,12"
+			FontSize="24"
+			FontWeight="SemiBold"
+			Text="{Binding TargetType.Name, Mode=OneWay}" />
+
+		<Border
+			Grid.Row="2"
+			Background="#10000000"
+			BorderBrush="#20000000"
+			BorderThickness="0,1,0,0">
+			<Grid Margin="18">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="8" />
+					<ColumnDefinition Width="auto" />
+				</Grid.ColumnDefinitions>
+
+				<ComboBox
+					Grid.Column="0"
+					ItemsSource="{Binding AvailableTypes}"
+					SelectedItem="{Binding TargetType, Mode=TwoWay}" />
+
+				<Button
+					Grid.Column="2"
+					Click="OnRefreshButtonClick"
+					Content="Refresh" />
+			</Grid>
+		</Border>
+
+		<DataGrid
+			Grid.Row="1"
+			AutoGenerateColumns="False"
+			Background="#80FFFFFF"
+			CanUserAddRows="False"
+			CanUserDeleteRows="False"
+			CanUserReorderColumns="False"
+			CanUserSortColumns="False"
+			IsReadOnly="True"
+			ItemsSource="{Binding Properties}"
+			ScrollViewer.CanContentScroll="True"
+			SelectionMode="Single"
+			Style="{StaticResource SimpleDataGridStyle}"
+			VirtualizingPanel.ScrollUnit="Pixel">
+
+			<DataGrid.Columns>
+				<DataGridTemplateColumn Width="auto">
+					<DataGridTemplateColumn.Header>
+						<Grid DataContext="{Binding ViewModel, ElementName=Root}">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="auto" />
+								<ColumnDefinition Width="8" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+							<TextBlock Grid.Column="0" Text="Property" />
+							<TextBox
+								Grid.Column="2"
+								MinWidth="120"
+								FontWeight="Normal"
+								KeyDown="OnSearchTextBoxKeyDown"
+								Text="{Binding SearchingKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+						</Grid>
+					</DataGridTemplateColumn.Header>
+
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate DataType="local:SystemParameterViewModel">
+							<TextBox
+								FontWeight="SemiBold"
+								Style="{StaticResource DataGridReadOnlyTextBlockLikeTextBoxStyle}"
+								Text="{Binding Name, Mode=OneWay}" />
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn Width="auto" Header="Type">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate DataType="local:SystemParameterViewModel">
+							<TextBox Style="{StaticResource DataGridReadOnlyTextBlockLikeTextBoxStyle}" Text="{Binding Type.Name, Mode=OneWay}" />
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn Width="*" Header="Value">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate DataType="local:SystemParameterViewModel">
+							<Border Padding="6">
+								<ContentControl Content="{Binding Value, Mode=OneWay}" ContentTemplateSelector="{StaticResource PropertyValueCellTemplateSelector}" />
+							</Border>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn Width="auto" Header="Help">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate DataType="local:SystemParameterViewModel">
+							<TextBlock
+								Margin="6"
+								HorizontalAlignment="Center"
+								VerticalAlignment="Center"
+								ToolTip="{Binding HelpLink, Mode=OneWay}">
+								<Hyperlink Click="OnHelpHyperlinkClick">
+									Help
+								</Hyperlink>
+							</TextBlock>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+	</Grid>
+
+</Window>
