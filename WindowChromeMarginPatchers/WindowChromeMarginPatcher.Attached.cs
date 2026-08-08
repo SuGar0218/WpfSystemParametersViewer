@@ -1,7 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Windows;
 
-namespace SystemParametersViewer;
+using SystemParametersViewer;
+
+namespace WindowChromeMarginFixup;
 
 public partial class WindowChromeMarginPatcher
 {
@@ -25,17 +27,17 @@ public partial class WindowChromeMarginPatcher
                 patcher = CreateWindowChromeMarginPatcher(window);
                 _patchers.Add(window, patcher);
             }
-            patcher.Enable();
+            patcher.IsEnabled = true;
         }
         else if (_patchers.TryGetValue(window, out WindowChromeMarginPatcher? patcher) && patcher is not null)
         {
-            patcher.Disable();
+            patcher.IsEnabled = false;
         }
     }
 
     private static WindowChromeMarginPatcher CreateWindowChromeMarginPatcher(Window window)
     {
-        if (Environment.OSVersion.WindowsVersion() >= 10)
+        if (Environment.OSVersion.WindowsVersion() >= 11)
             return new WindowChromeMarginPatcherForWindows11(window);
 
         return new WindowChromeMarginPatcherForWindows7(window);

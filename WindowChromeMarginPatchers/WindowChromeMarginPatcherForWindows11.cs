@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Shell;
 
-namespace SystemParametersViewer
+namespace WindowChromeMarginFixup
 {
     public class WindowChromeMarginPatcherForWindows11 : WindowChromeMarginPatcher
     {
@@ -9,99 +9,75 @@ namespace SystemParametersViewer
         {
         }
 
-        protected override Thickness DetermineContentMargin(Window window)
+        protected override Thickness DetermineRootMargin(Window window)
         {
-            Thickness margin;
-            WindowChrome windowChrome;
+            WindowChrome? windowChrome = WindowChrome.GetWindowChrome(window);
+            if (windowChrome is null)
+                return new Thickness(0);
+
             switch (window.WindowState)
             {
                 case WindowState.Normal:
-                    windowChrome = WindowChrome.GetWindowChrome(window);
-                    if (windowChrome is null)
-                        break;
-
-                    margin = new Thickness(0, 0, 0, 0);
-                    if (Environment.OSVersion.IsWindows11())
+                    Thickness normalMargin = new(0, 0, 0, 0);
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Left))
                     {
-                        if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Left))
-                        {
-                            margin.Left += SystemParameters.BorderWidth;
-                        }
-                        if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Right))
-                        {
-                            margin.Right += SystemParameters.BorderWidth;
-                        }
-                        if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Bottom))
-                        {
-                            margin.Bottom += SystemParameters.BorderWidth;
-                        }
-                        if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Top))
-                        {
-                            margin.Top += SystemParameters.BorderWidth;
-                        }
-                        else
-                        {
-                            margin.Top -= SystemParameters.ThinHorizontalBorderHeight;
-                        }
+                        normalMargin.Left += SystemParameters.BorderWidth;
                     }
-                    break;
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Right))
+                    {
+                        normalMargin.Right += SystemParameters.BorderWidth;
+                    }
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Bottom))
+                    {
+                        normalMargin.Bottom += SystemParameters.BorderWidth;
+                    }
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Top))
+                    {
+                        normalMargin.Top += SystemParameters.BorderWidth;
+                    }
+                    return normalMargin;
 
                 case WindowState.Maximized:
-                    windowChrome = WindowChrome.GetWindowChrome(window);
-                    if (windowChrome is null)
-                        break;
-
-                    margin = new Thickness(0, 0, 0, 0);
                     double x =
                         SystemParameters.BorderWidth +
-                        SystemParameters.FixedFrameVerticalBorderWidth +
-                        SystemParameters.ResizeFrameVerticalBorderWidth;
+                        SystemParameters.ResizeFrameVerticalBorderWidth +
+                        SystemParameters.ThinVerticalBorderWidth;
+
                     double y =
                         SystemParameters.BorderWidth +
-                        SystemParameters.FixedFrameHorizontalBorderHeight +
-                        SystemParameters.ResizeFrameHorizontalBorderHeight;
-                    margin.Left += x;
-                    margin.Right += x;
-                    margin.Top += y;
-                    margin.Bottom += y;
-                    if (windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Left))
+                        SystemParameters.ResizeFrameHorizontalBorderHeight +
+                        SystemParameters.ThinHorizontalBorderHeight;
+
+                    Thickness maximizedMargin = new(x, y, x, y);
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Left))
                     {
-                        margin.Left -= SystemParameters.BorderWidth;
+                        maximizedMargin.Left +=
+                            SystemParameters.FixedFrameVerticalBorderWidth +
+                            SystemParameters.ThinVerticalBorderWidth;
                     }
-                    else
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Right))
                     {
-                        margin.Left += SystemParameters.BorderWidth;
+                        maximizedMargin.Right +=
+                            SystemParameters.FixedFrameVerticalBorderWidth +
+                            SystemParameters.ThinVerticalBorderWidth;
                     }
-                    if (windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Right))
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Bottom))
                     {
-                        margin.Right -= SystemParameters.BorderWidth;
+                        maximizedMargin.Bottom +=
+                            SystemParameters.FixedFrameHorizontalBorderHeight +
+                            SystemParameters.ThinHorizontalBorderHeight;
                     }
-                    else
+                    if (!windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Top))
                     {
-                        margin.Right += SystemParameters.BorderWidth;
+                        maximizedMargin.Top +=
+                            SystemParameters.FixedFrameHorizontalBorderHeight +
+                            SystemParameters.ThinHorizontalBorderHeight;
                     }
-                    if (windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Bottom))
-                    {
-                        margin.Bottom -= SystemParameters.BorderWidth;
-                    }
-                    else
-                    {
-                        margin.Bottom += SystemParameters.BorderWidth;
-                    }
-                    if (windowChrome.NonClientFrameEdges.HasFlag(NonClientFrameEdges.Top))
-                    {
-                        margin.Top -= SystemParameters.BorderWidth;
-                    }
-                    else
-                    {
-                        margin.Top += SystemParameters.BorderWidth;
-                    }
-                    break;
+                    return maximizedMargin;
 
                 default:
-                    break;
+                    return new Thickness(0);
             }
-            return margin;
         }
     }
 }

@@ -4,6 +4,7 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:dwm="clr-namespace:SuGarToolkit.WPF.Controls.Windows"
+	xmlns:fixup="clr-namespace:WindowChromeMarginFixup"
 	xmlns:local="clr-namespace:SystemParametersViewer"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	x:Name="Root"
@@ -12,13 +13,13 @@
 	Height="600"
 	d:DataContext="{d:DesignInstance local:MainViewModel}"
 	dwm:DwmWindowAttributes.SystemBackdrop="Mica"
-	local:WindowChromeMarginPatcher.IsEnabled="True"
+	fixup:WindowChromeMarginPatcher.IsEnabled="True"
 	Background="Transparent"
 	FontSize="14"
 	mc:Ignorable="d">
 
 	<WindowChrome.WindowChrome>
-		<WindowChrome GlassFrameThickness="-1" NonClientFrameEdges="Left,Right,Bottom" />
+		<WindowChrome x:Name="windowChrome" GlassFrameThickness="-1" />
 	</WindowChrome.WindowChrome>
 
 	<Window.Resources>
@@ -50,6 +51,7 @@
 			x:Key="ReadOnlyTextBlockLikeTextBoxStyle"
 			BasedOn="{StaticResource BaseTextBoxStyle}"
 			TargetType="TextBox">
+			<Setter Property="IsReadOnly" Value="True" />
 			<Setter Property="Background" Value="Transparent" />
 			<Setter Property="BorderBrush" Value="Transparent" />
 			<Setter Property="BorderThickness" Value="0" />
@@ -199,7 +201,7 @@
 			<Border.Background>
 				<LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
 					<GradientStop Offset="0.0" Color="#00FFFFFF" />
-					<GradientStop Offset="1.0" Color="#80FFFFFF" />
+					<GradientStop Offset="1.0" Color="#A0FFFFFF" />
 				</LinearGradientBrush>
 			</Border.Background>
 		</Border>
@@ -238,7 +240,7 @@
 		<DataGrid
 			Grid.Row="1"
 			AutoGenerateColumns="False"
-			Background="#80FFFFFF"
+			Background="#A0FFFFFF"
 			CanUserAddRows="False"
 			CanUserDeleteRows="False"
 			CanUserReorderColumns="False"

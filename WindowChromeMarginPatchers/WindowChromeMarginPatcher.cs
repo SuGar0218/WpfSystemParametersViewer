@@ -1,8 +1,9 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shell;
 
-namespace SystemParametersViewer;
+namespace WindowChromeMarginFixup;
 
 public abstract partial class WindowChromeMarginPatcher
 {
@@ -13,43 +14,60 @@ public abstract partial class WindowChromeMarginPatcher
     }
 
     private readonly Window _window;
+    private static readonly DependencyPropertyDescriptor _windowChromeDescriptor = DependencyPropertyDescriptor.FromProperty(WindowChrome.WindowChromeProperty, typeof(Window));
 
-    private FrameworkElement? WindowRootFrameworkElement
+    public bool IsEnabled
     {
-        get
+        get;
+        set
         {
-            if (VisualTreeHelper.GetChildrenCount(_window) > 0 && VisualTreeHelper.GetChild(_window, 0) is FrameworkElement frameworkElement)
-                return frameworkElement;
+            if (field == value)
+                return;
 
-            return null;
+            field = value;
+            if (IsEnabled)
+            {
+                _window.StateChanged += OnWindowStateChanged;
+                _windowChromeDescriptor.AddValueChanged(_window, OnWindowChromeChanged);
+                if (_window.IsLoaded)
+                {
+                    DetermineRootMargin(_window);
+                    return;
+                }
+                _window.Loaded += OnWindowLoaded;
+                void OnWindowLoaded(object sender, RoutedEventArgs e)
+                {
+                    _window.Loaded -= OnWindowLoaded;
+                    FixupMargin();
+                }
+            }
+            else
+            {
+                _window.StateChanged -= OnWindowStateChanged;
+                _windowChromeDescriptor.RemoveValueChanged(this, OnWindowChromeChanged);
+            }
         }
     }
-
-    public void Enable()
-    {
-        _window.StateChanged += OnWindowStateChanged;
-        if (_window.IsLoaded)
-        {
-            DetermineContentMargin(_window);
-            return;
-        }
-        _window.Loaded += OnWindowLoaded;
-        void OnWindowLoaded(object sender, RoutedEventArgs e)
-        {
-            _window.Loaded -= OnWindowLoaded;
-            WindowRootFrameworkElement?.Margin = DetermineContentMargin(_window);
-        }
-    }
-
-    public void Disable()
-    {
-        _window.StateChanged -= OnWindowStateChanged;
-    }
-
     private void OnWindowStateChanged(object? sender, EventArgs e)
     {
-        WindowRootFrameworkElement?.Margin = DetermineContentMargin(_window);
+        FixupMargin();
     }
 
-    protected abstract Thickness DetermineContentMargin(Window window);
+    private void OnWindowChromeChanged(object? sender, EventArgs e)
+    {
+        FixupMargin();
+    }
+
+    private void FixupMargin()
+    {
+        if (VisualTreeHelper.GetChildrenCount(_window) <= 0)
+            return;
+
+        if (VisualTreeHelper.GetChild(_window, 0) is not FrameworkElement root)
+            return;
+
+        root.Margin = DetermineRootMargin(_window);
+    }
+
+    protected abstract Thickness DetermineRootMargin(Window window);
 }
